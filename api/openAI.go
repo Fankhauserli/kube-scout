@@ -35,7 +35,7 @@ func NewOpenAIClient(baseURL, model, apiKeyEnv string) *OpenAIClient {
 func (o *OpenAIClient) GenerateResponse(ctx context.Context, prompt string) (string, error) {
 	resp, err := o.client.Responses.New(ctx, responses.ResponseNewParams{
 		Input: responses.ResponseNewParamsInputUnion{OfString: openai.String(prompt)},
-		Model: openai.ChatModelGPT5_2,
+		Model: o.model,
 	})
 
 	return resp.OutputText(), err
