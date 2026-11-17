@@ -54,6 +54,7 @@ func (a *Agent) Run(ctx context.Context, task string) (string, error) {
 
 		toolResult, err := tool.Execute(ctx, toolCall.Input)
 		if err != nil {
+			log.Printf("Tool '%s' failed: %v", toolCall.ToolName, err)
 			conversationHistory = append(conversationHistory, fmt.Sprintf("Tool execution failed: %v", err))
 			continue
 		}
