@@ -2,6 +2,7 @@ package tool
 
 import (
 	"context"
+	"log"
 	"os/exec"
 	"strings"
 )
@@ -19,5 +20,6 @@ func (c *KubectlTool) Description() string {
 func (c *KubectlTool) Execute(ctx context.Context, input string) (string, error) {
 	cmd := exec.CommandContext(ctx, "/usr/local/bin/kubectl", strings.Split(input, " ")...)
 	output, err := cmd.CombinedOutput()
+	log.Printf(" [tool: kubectl] %s", string(output))
 	return string(output), err
 }
