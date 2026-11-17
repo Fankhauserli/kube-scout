@@ -8,9 +8,10 @@ import (
 )
 
 type EnvConfig struct {
-	LLM   LLMConfig    `yaml:"llm"`
-	Agent AgentConfig  `yaml:"agent"`
-	Tools []ToolConfig `yaml:"tools"`
+	LLM     LLMConfig     `yaml:"llm"`
+	Agent   AgentConfig   `yaml:"agent"`
+	Tools   []ToolConfig  `yaml:"tools"`
+	Trigger TriggerConfig `yaml:"trigger"`
 }
 
 type LLMConfig struct {
@@ -37,6 +38,15 @@ type NewToolConfig struct {
 	Endpoint    string `yaml:"endpoint"`
 	ApiKeyEnv   string `yaml:"apiKeyEnv"`
 	Method      string `yaml:"method"`
+}
+
+type TriggerConfig struct {
+	Enabled     bool   `yaml:"enabled"`
+	Name        string `yaml:"name"`
+	Address     string `yaml:"address"`
+	Channel     string `yaml:"channel"`
+	UserEnv     string `yaml:"userEnv"`
+	PasswordEnv string `yaml:"passwordEnv"`
 }
 
 func LoadEnv() (*EnvConfig, error) {

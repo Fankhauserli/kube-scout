@@ -9,6 +9,7 @@ import (
 	"github.com/Fankhauserli/kube-scout/agent"
 	"github.com/Fankhauserli/kube-scout/api"
 	"github.com/Fankhauserli/kube-scout/config"
+	"github.com/Fankhauserli/kube-scout/event"
 	tool "github.com/Fankhauserli/kube-scout/tools"
 )
 
@@ -26,6 +27,51 @@ func main() {
 
 	llmClient := api.NewOpenAIClient(config.LLM.Endpoint, config.LLM.ModelName, config.LLM.ApiKeyEnv)
 
+	prompt := getPrompt(config)
+	// Create agent
+	agentInstance := agent.NewAgent(toolRegistry, llmClient, config.Agent.MaxIterations)
+
+	if config.Trigger.Enabled {
+		eventConn, err := event.NewRabbitMQEventQueue(config.Trigger.Address, config.Trigger.Channel, config.Trigger.UserEnv, config.Trigger.PasswordEnv)
+		if err != nil {
+			log.Fatalf("Failed to connect to RabbitMQ event queue: %v", err)
+		}
+		defer eventConn.Close()
+
+		msgs, err := eventConn.Channel.Consume(
+			eventConn.Queue.Name, // queue
+			"",                   // consumer
+			true,                 // auto-ack
+			false,                // exclusive
+			false,                // no-local
+			false,                // no-wait
+			nil,                  // args
+		)
+
+		var forever chan struct{}
+
+		go func() {
+			for d := range msgs {
+				result, err := agentInstance.Run(ctx, prompt+"\n\nEvent: "+string(d.Body))
+				if err != nil {
+					log.Printf("Error running agent: %v", err)
+				}
+				log.Printf(" [x] %s", result)
+			}
+		}()
+		<-forever
+	} else {
+		result, err := agentInstance.Run(ctx, prompt)
+		if err != nil {
+			log.Fatalf("Agent failed: %v", err)
+		}
+
+		fmt.Println("Final Result:")
+		fmt.Println(result)
+	}
+}
+
+func getPrompt(config *config.EnvConfig) string {
 	prompt := config.Agent.PromptTemplate
 	if config.Agent.PromptFile != "" {
 		promptContent, err := os.ReadFile(config.Agent.PromptFile)
@@ -34,16 +80,7 @@ func main() {
 		}
 		prompt = string(promptContent)
 	}
-	// Create agent
-	agentInstance := agent.NewAgent(toolRegistry, llmClient, config.Agent.MaxIterations)
-
-	result, err := agentInstance.Run(ctx, prompt)
-	if err != nil {
-		log.Fatalf("Agent failed: %v", err)
-	}
-
-	fmt.Println("Final Result:")
-	fmt.Println(result)
+	return prompt
 }
 
 func registerTools(toolRegistry *tool.ToolRegistry, config *config.EnvConfig) {
