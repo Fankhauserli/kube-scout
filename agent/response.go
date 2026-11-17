@@ -48,15 +48,31 @@ func (a *Agent) parseResponse(response string) (*ToolCall, bool) {
 		}
 	}
 
-	// Try to parse as tool call
-	var toolCall ToolCall
-	if err := json.Unmarshal([]byte(jsonStr), &toolCall); err != nil {
+	var raw struct {
+		ToolName string          `json:"tool_name"`
+		Input    json.RawMessage `json:"input"`
+		Thought  string          `json:"thought"`
+	}
+	if err := json.Unmarshal([]byte(jsonStr), &raw); err != nil {
 		return nil, false
 	}
 
-	if toolCall.ToolName == "" || toolCall.Input == "" {
+	var inputStr string
+	if len(raw.Input) > 0 {
+		// Unquote if the LLM sent a JSON string ("get pods -A");
+		// otherwise keep the JSON object/array as a raw JSON string.
+		if err := json.Unmarshal(raw.Input, &inputStr); err != nil {
+			inputStr = string(raw.Input)
+		}
+	}
+
+	if raw.ToolName == "" || inputStr == "" {
 		return nil, false
 	}
 
-	return &toolCall, false
+	return &ToolCall{
+		ToolName: raw.ToolName,
+		Input:    inputStr,
+		Thought:  raw.Thought,
+	}, false
 }
