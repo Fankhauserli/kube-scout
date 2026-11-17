@@ -20,4 +20,9 @@ RUN apk add --no-cache ca-certificates tzdata
 WORKDIR /app
 COPY --from=builder /agent /usr/local/bin/agent
 
+# add kubectl binary
+RUN apk add --no-cache curl
+RUN curl -LO "https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && chmod +x kubectl
+COPY kubectl /usr/local/bin/kubectl
+
 ENTRYPOINT ["/usr/local/bin/agent"]

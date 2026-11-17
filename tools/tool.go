@@ -4,7 +4,9 @@ import (
 	"context"
 )
 
-var DefaultTools = []Tool{}
+var DefaultTools = []Tool{
+	&KubectlTool{},
+}
 
 // Tool represents a capability the agent can use
 type Tool interface {
