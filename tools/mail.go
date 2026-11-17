@@ -25,7 +25,9 @@ func (c *MailTool) Name() string {
 }
 
 func (c *MailTool) Description() string {
-	return `Mail tool to send emails, to use just provide the email content you want to send
+	return `Mail tool to send emails, to use just provide the email content you want to send 
+	the body of the email can be in HTML format and should be easily readable even in bed half asleep, 
+	so green and red and important stuff big.
 	which should include the subject and body in the following format
 	(input must be a JSON-encoded string (with escaped quotes), not a nested JSON object.):
 	"{
