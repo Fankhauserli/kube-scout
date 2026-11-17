@@ -53,18 +53,15 @@ func main() {
 
 		log.Printf(" [*] Waiting for messages.")
 
-		var forever chan struct{}
-
-		go func() {
-			for d := range msgs {
-				result, err := agentInstance.Run(ctx, prompt+"\n\nEvent: "+string(d.Body))
-				if err != nil {
-					log.Printf("Error running agent: %v", err)
-				}
-				log.Printf(" [x] %s", result)
+		for d := range msgs {
+			log.Printf(" [x] Received a message: %s", d.Body)
+			result, err := agentInstance.Run(ctx, prompt+"\n\nEvent: "+string(d.Body))
+			if err != nil {
+				log.Printf("Error running agent: %v", err)
 			}
-		}()
-		<-forever
+			log.Printf(" [x] %s", result)
+		}
+
 	} else {
 		result, err := agentInstance.Run(ctx, prompt)
 		if err != nil {
