@@ -18,6 +18,11 @@ func (a *Agent) Run(ctx context.Context, task string) (string, error) {
 		// Build the prompt with context
 		prompt := a.buildPrompt(conversationHistory)
 
+		// if max iterations reached, tell the llm to send a mail
+		if iterations >= a.maxIterations {
+			prompt += "\nMaximum iterations reached. Please provide a final answer or send an email with the results."
+		}
+
 		// Get response from LLM
 		response, err := a.llmClient.GenerateResponse(ctx, prompt)
 		if err != nil {
