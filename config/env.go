@@ -27,9 +27,10 @@ type AgentConfig struct {
 }
 
 type ToolConfig struct {
-	NewTool NewToolConfig `yaml:"newTool"`
-	Enabled bool          `yaml:"enabled"`
-	Name    string        `yaml:"name"`
+	NewTool       NewToolConfig          `yaml:"newTool"`
+	Enabled       bool                   `yaml:"enabled"`
+	Name          string                 `yaml:"name"`
+	Configuration map[string]interface{} `yaml:"configuration"`
 }
 
 type NewToolConfig struct {

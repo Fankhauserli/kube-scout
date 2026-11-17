@@ -87,7 +87,15 @@ func registerTools(toolRegistry *tool.ToolRegistry, config *config.EnvConfig) {
 	// Register tools based on the configuration
 	disabledTools := make(map[string]bool)
 	for _, toolConfig := range config.Tools {
-		if toolConfig.Enabled && toolConfig.NewTool.Name != "" {
+		if toolConfig.Enabled && toolConfig.Name == "mail" {
+			// Register the mail tool
+			mailTool := &tool.MailTool{
+				Addr:     toolConfig.Configuration["addr"].(string),
+				MailFrom: toolConfig.Configuration["mailFrom"].(string),
+				MailTo:   toolConfig.Configuration["mailTo"].(string),
+			}
+			toolRegistry.Register(mailTool)
+		} else if toolConfig.Enabled && toolConfig.NewTool.Name != "" {
 			// Create a new tool instance based on the configuration
 			newTool := tool.NewApiTool(
 				toolConfig.NewTool.Name,
