@@ -37,18 +37,21 @@ func main() {
 			log.Fatalf("Failed to connect to RabbitMQ event queue: %v", err)
 		}
 		defer eventConn.Close()
+		if err := eventConn.Channel.Qos(1, 0, false); err != nil {
+			log.Fatalf("Failed to set QoS: %v", err)
+		}
 
 		msgs, err := eventConn.Channel.Consume(
 			eventConn.Queue.Name, // queue
 			"",                   // consumer
-			true,                 // auto-ack
+			false,                // auto-ack = false (manual ack)
 			false,                // exclusive
 			false,                // no-local
 			false,                // no-wait
 			nil,                  // args
 		)
 		if err != nil {
-			log.Fatalf("Failed to register a consumer: %v", err)
+			log.Fatalf("Failed to register consumer: %v", err)
 		}
 
 		log.Printf(" [*] Waiting for messages.")
@@ -58,8 +61,10 @@ func main() {
 			result, err := agentInstance.Run(ctx, prompt+"\n\nEvent: "+string(d.Body))
 			if err != nil {
 				log.Printf("Error running agent: %v", err)
+				d.Nack(false, true)
 			}
 			log.Printf(" [x] %s", result)
+			d.Ack(false)
 		}
 
 	} else {
