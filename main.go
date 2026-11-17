@@ -62,9 +62,10 @@ func main() {
 			if err != nil {
 				log.Printf("Error running agent: %v", err)
 				d.Nack(false, true)
+			} else {
+				d.Ack(false)
 			}
 			log.Printf(" [x] %s", result)
-			d.Ack(false)
 		}
 
 	} else {

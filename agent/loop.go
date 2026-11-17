@@ -66,5 +66,5 @@ func (a *Agent) Run(ctx context.Context, task string) (string, error) {
 		conversationHistory = append(conversationHistory, resultMessage)
 	}
 
-	return "", fmt.Errorf("max iterations reached without completing the task")
+	return "max iterations reached without completing the task", nil
 }
