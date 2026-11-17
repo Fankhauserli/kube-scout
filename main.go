@@ -47,6 +47,11 @@ func main() {
 			false,                // no-wait
 			nil,                  // args
 		)
+		if err != nil {
+			log.Fatalf("Failed to register a consumer: %v", err)
+		}
+
+		log.Printf(" [*] Waiting for messages.")
 
 		var forever chan struct{}
 
