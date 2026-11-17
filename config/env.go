@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"fmt"
@@ -39,7 +39,7 @@ type NewToolConfig struct {
 	Method      string `yaml:"method"`
 }
 
-func loadEnv() (*EnvConfig, error) {
+func LoadEnv() (*EnvConfig, error) {
 	config := &EnvConfig{}
 
 	file, exists := os.LookupEnv("CONFIG_FILE_LOCATION")

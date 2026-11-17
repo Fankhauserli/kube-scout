@@ -8,13 +8,14 @@ import (
 
 	"github.com/Fankhauserli/kube-scout/agent"
 	"github.com/Fankhauserli/kube-scout/api"
+	"github.com/Fankhauserli/kube-scout/config"
 	tool "github.com/Fankhauserli/kube-scout/tools"
 )
 
 func main() {
 	ctx := context.Background()
 
-	config, err := loadEnv()
+	config, err := config.LoadEnv()
 	if err != nil {
 		log.Fatalf("Failed to load environment config: %v", err)
 	}
@@ -45,7 +46,7 @@ func main() {
 	fmt.Println(result)
 }
 
-func registerTools(toolRegistry *tool.ToolRegistry, config *EnvConfig) {
+func registerTools(toolRegistry *tool.ToolRegistry, config *config.EnvConfig) {
 	// Register tools based on the configuration
 	disabledTools := make(map[string]bool)
 	for _, toolConfig := range config.Tools {
