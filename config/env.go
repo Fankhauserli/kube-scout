@@ -21,9 +21,10 @@ type LLMConfig struct {
 }
 
 type AgentConfig struct {
-	PromptTemplate string `yaml:"promptTemplate"`
-	PromptFile     string `yaml:"promptFile"`
-	MaxIterations  int    `yaml:"maxIterations"`
+	PromptTemplate      string `yaml:"promptTemplate"`
+	PromptFile          string `yaml:"promptFile"`
+	MaxIterations       int    `yaml:"maxIterations"`
+	MaxToolResultLength int    `yaml:"maxToolResultLength"`
 }
 
 type ToolConfig struct {

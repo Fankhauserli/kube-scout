@@ -61,6 +61,10 @@ func (a *Agent) Run(ctx context.Context, task string) (string, error) {
 
 		log.Printf("Tool '%s' executed successfully", toolCall.ToolName)
 
+		if len(toolResult) > a.maxToolResultLength {
+			toolResult = toolResult[:a.maxToolResultLength] + "... (truncated)"
+		}
+
 		// Add result to conversation history
 		resultMessage := fmt.Sprintf("Tool '%s' returned: %s", toolCall.ToolName, toolResult)
 		conversationHistory = append(conversationHistory, resultMessage)

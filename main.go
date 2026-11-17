@@ -29,7 +29,7 @@ func main() {
 
 	prompt := getPrompt(config)
 	// Create agent
-	agentInstance := agent.NewAgent(toolRegistry, llmClient, config.Agent.MaxIterations)
+	agentInstance := agent.NewAgent(toolRegistry, llmClient, config.Agent.MaxIterations, config.Agent.MaxToolResultLength)
 
 	if config.Trigger.Enabled {
 		eventConn, err := event.NewRabbitMQEventQueue(config.Trigger.Address, config.Trigger.Channel, config.Trigger.UserEnv, config.Trigger.PasswordEnv)

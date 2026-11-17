@@ -8,9 +8,10 @@ import (
 
 // Agent represents an AI agent that can use tools to complete tasks
 type Agent struct {
-	tools         *tool.ToolRegistry
-	llmClient     LLMClient
-	maxIterations int
+	tools               *tool.ToolRegistry
+	llmClient           LLMClient
+	maxIterations       int
+	maxToolResultLength int
 }
 
 // LLMClient represents a language model interface
@@ -33,10 +34,11 @@ type ToolResult struct {
 	Error    error
 }
 
-func NewAgent(tools *tool.ToolRegistry, llmClient LLMClient, maxIterations int) *Agent {
+func NewAgent(tools *tool.ToolRegistry, llmClient LLMClient, maxIterations int, maxToolResultLength int) *Agent {
 	return &Agent{
-		tools:         tools,
-		llmClient:     llmClient,
-		maxIterations: maxIterations,
+		tools:               tools,
+		llmClient:           llmClient,
+		maxIterations:       maxIterations,
+		maxToolResultLength: maxToolResultLength,
 	}
 }
