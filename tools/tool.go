@@ -2,6 +2,7 @@ package tool
 
 import (
 	"context"
+	"sort"
 )
 
 var DefaultTools = []Tool{
@@ -44,5 +45,8 @@ func (tr *ToolRegistry) List() []Tool {
 	for _, tool := range tr.tools {
 		tools = append(tools, tool)
 	}
+	sort.Slice(tools, func(i, j int) bool {
+		return tools[i].Name() < tools[j].Name()
+	})
 	return tools
 }

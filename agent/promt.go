@@ -6,13 +6,8 @@ func (a *Agent) buildPrompt(history []string) string {
 	toolDescriptions := a.getToolDescriptions()
 
 	prompt := `You are an AI agent that can use tools to complete tasks.
-	
-	Conversation history:
-	`
-	for i, entry := range history {
-		prompt += fmt.Sprintf("%d. %s\n", i+1, entry)
-	}
-	prompt += `Available tools:
+
+Available tools:
 ` + toolDescriptions + `
 
 Instructions:
@@ -22,7 +17,7 @@ Instructions:
 4. Always respond in JSON format with this structure:
 {
   "tool_name": "name_of_tool",
-  "input": "input_for_tool",
+  "input": "string or JSON object for the tool",
   "thought": "Your reasoning"
 }
 5. When providing the final answer, use this format:
@@ -30,8 +25,13 @@ Instructions:
   "final_answer": "Your complete answer here"
 }
 
-What should be your next action?
+Conversation history:
 `
+	for i, entry := range history {
+		prompt += fmt.Sprintf("%d. %s\n", i+1, entry)
+	}
+
+	prompt += "\nWhat should be your next action?"
 
 	return prompt
 }
