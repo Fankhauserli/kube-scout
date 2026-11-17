@@ -6,8 +6,13 @@ func (a *Agent) buildPrompt(history []string) string {
 	toolDescriptions := a.getToolDescriptions()
 
 	prompt := `You are an AI agent that can use tools to complete tasks.
-
-Available tools:
+	
+	Conversation history:
+	`
+	for i, entry := range history {
+		prompt += fmt.Sprintf("%d. %s\n", i+1, entry)
+	}
+	prompt += `Available tools:
 ` + toolDescriptions + `
 
 Instructions:
@@ -25,13 +30,8 @@ Instructions:
   "final_answer": "Your complete answer here"
 }
 
-Conversation history:
+What should be your next action?
 `
-	for i, entry := range history {
-		prompt += fmt.Sprintf("%d. %s\n", i+1, entry)
-	}
-
-	prompt += "\nWhat should be your next action?"
 
 	return prompt
 }
