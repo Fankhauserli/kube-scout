@@ -34,6 +34,14 @@ type ToolResult struct {
 	Error    error
 }
 
+type ToolCallResponse struct {
+	Thought  string `json:"thought"`
+	ToolName string `json:"tool_name,omitempty"`
+	Input    string `json:"input,omitempty"`
+	Error    string `json:"error,omitempty"`
+	Output   string `json:"output,omitempty"`
+}
+
 func NewAgent(tools *tool.ToolRegistry, llmClient LLMClient, maxIterations int, maxToolResultLength int) *Agent {
 	return &Agent{
 		tools:               tools,

@@ -8,7 +8,7 @@ import (
 
 // Run executes the agent loop
 func (a *Agent) Run(ctx context.Context, task string) (string, error) {
-	conversationHistory := []string{task}
+	conversationHistory := []ToolCallResponse{{Thought: task}}
 	iterations := 0
 
 	for iterations < a.maxIterations {
@@ -19,7 +19,7 @@ func (a *Agent) Run(ctx context.Context, task string) (string, error) {
 		prompt := a.buildPrompt(conversationHistory)
 
 		// if max iterations reached, tell the llm to send a mail
-		if iterations >= a.maxIterations {
+		if iterations >= a.maxIterations-1 {
 			prompt += "\nMaximum iterations reached. Please provide a final answer or send an email with the results."
 		}
 
@@ -32,42 +32,60 @@ func (a *Agent) Run(ctx context.Context, task string) (string, error) {
 		log.Printf("[INFO] [agent] LLM response: %s", response)
 
 		// Try to parse a tool call from the response
-		toolCall, isFinalAnswer := a.parseResponse(response)
+		toolCall, finalAnswer, isFinalAnswer := a.parseResponse(response)
 
 		if isFinalAnswer {
 			// Agent has provided the final answer
-			return response, nil
+			return finalAnswer, nil
 		}
 
 		if toolCall == nil {
 			// Couldn't parse a valid tool call
-			conversationHistory = append(conversationHistory, "Invalid response format. Please use JSON format with tool_name, input, and thought fields.")
+			conversationHistory = append(conversationHistory, ToolCallResponse{
+				Thought: response,
+				Error:   "Invalid response format. Please use JSON format with tool_name, input, and thought fields.",
+			})
 			continue
 		}
 
 		// Execute the tool
 		tool := a.tools.Get(toolCall.ToolName)
 		if tool == nil {
-			conversationHistory = append(conversationHistory, fmt.Sprintf("Tool '%s' not found. Available tools: %v", toolCall.ToolName, a.getToolNames()))
+			conversationHistory = append(conversationHistory, ToolCallResponse{
+				Thought:  toolCall.Thought,
+				Input:    toolCall.Input,
+				ToolName: toolCall.ToolName,
+				Error:    fmt.Sprintf("Tool '%s' not found. Available tools: %v", toolCall.ToolName, a.getToolNames()),
+			})
 			continue
 		}
 
 		toolResult, err := tool.Execute(ctx, toolCall.Input)
+		if len(toolResult) > a.maxToolResultLength {
+			toolResult = toolResult[:a.maxToolResultLength] + "... (truncated)"
+		}
+
 		if err != nil {
 			log.Printf("[ERROR] [agent] Tool '%s' failed: %v", toolCall.ToolName, err)
-			conversationHistory = append(conversationHistory, fmt.Sprintf("Tool execution failed: %v", err))
+			conversationHistory = append(conversationHistory, ToolCallResponse{
+				Thought:  toolCall.Thought,
+				Input:    toolCall.Input,
+				Output:   toolResult,
+				ToolName: toolCall.ToolName,
+				Error:    fmt.Sprintf("Tool '%s' execution failed: %v", toolCall.ToolName, err),
+			})
 			continue
 		}
 
 		log.Printf("[INFO] [agent] Tool '%s' executed successfully", toolCall.ToolName)
 
-		if len(toolResult) > a.maxToolResultLength {
-			toolResult = toolResult[:a.maxToolResultLength] + "... (truncated)"
-		}
-
 		// Add result to conversation history
-		resultMessage := fmt.Sprintf("Tool '%s' returned: %s", toolCall.ToolName, toolResult)
-		conversationHistory = append(conversationHistory, resultMessage)
+		conversationHistory = append(conversationHistory, ToolCallResponse{
+			Thought:  toolCall.Thought,
+			ToolName: toolCall.ToolName,
+			Output:   toolResult,
+			Input:    toolCall.Input,
+		})
 	}
 
 	return "max iterations reached without completing the task", nil

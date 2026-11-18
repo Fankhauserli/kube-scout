@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 type ApiTool struct {
@@ -26,7 +27,7 @@ func (c *ApiTool) Description() string {
 }
 
 func (c *ApiTool) Execute(ctx context.Context, input string) (string, error) {
-	httpClient := &http.Client{}
+	httpClient := &http.Client{Timeout: 30 * time.Second}
 
 	body := bytes.NewReader([]byte(input))
 

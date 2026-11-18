@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/mail"
 	"net/smtp"
 )
@@ -60,8 +61,14 @@ func (c *MailTool) Execute(ctx context.Context, input string) (string, error) {
 	msg += "\r\n" + mailContent.Body
 	bMsg := []byte(msg)
 
-	// Send using local postfix service
-	client, err := smtp.Dial(c.Addr)
+	var d net.Dialer
+	conn, err := d.DialContext(ctx, "tcp", c.Addr)
+	if err != nil {
+		return "", fmt.Errorf("failed to connect to SMTP server: %w", err)
+	}
+
+	host, _, _ := net.SplitHostPort(c.Addr)
+	client, err := smtp.NewClient(conn, host)
 
 	if err != nil {
 		return "", fmt.Errorf("failed to connect to SMTP server: %w", err)

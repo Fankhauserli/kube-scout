@@ -18,6 +18,7 @@ type LLMConfig struct {
 	ModelName string `yaml:"modelName"`
 	Endpoint  string `yaml:"endpoint"`
 	ApiKeyEnv string `yaml:"apiKeyEnv"`
+	Type      string `yaml:"type"`
 }
 
 type AgentConfig struct {
@@ -28,10 +29,10 @@ type AgentConfig struct {
 }
 
 type ToolConfig struct {
-	NewTool       NewToolConfig          `yaml:"newTool"`
-	Enabled       bool                   `yaml:"enabled"`
-	Name          string                 `yaml:"name"`
-	Configuration map[string]interface{} `yaml:"configuration"`
+	NewTool       NewToolConfig     `yaml:"newTool"`
+	Enabled       bool              `yaml:"enabled"`
+	Name          string            `yaml:"name"`
+	Configuration map[string]string `yaml:"configuration"`
 }
 
 type NewToolConfig struct {

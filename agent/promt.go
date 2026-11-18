@@ -1,8 +1,11 @@
 package agent
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
-func (a *Agent) buildPrompt(history []string) string {
+func (a *Agent) buildPrompt(history []ToolCallResponse) string {
 	toolDescriptions := a.getToolDescriptions()
 
 	prompt := `Tools:
@@ -14,7 +17,12 @@ Final answer: {"final_answer":"..."}
 History:
 `
 	for i, entry := range history {
-		prompt += fmt.Sprintf("%d. %s\n", i+1, entry)
+		jsonEntry, err := json.Marshal(entry)
+		if err != nil {
+			prompt += fmt.Sprintf("%d. Error marshaling entry\n", i+1)
+		} else {
+			prompt += fmt.Sprintf("%d. %s\n", i+1, jsonEntry)
+		}
 	}
 
 	prompt += "\nNext action:"

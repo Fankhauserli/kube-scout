@@ -1,78 +1,47 @@
 package agent
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
-func (a *Agent) parseResponse(response string) (*ToolCall, bool) {
-	// Try to find JSON in the response
-	var jsonStr string
-
-	// Look for JSON object in the response
-	startIdx := -1
-	for i := 0; i < len(response); i++ {
-		if response[i] == '{' {
-			startIdx = i
-			break
-		}
-	}
-
+func (a *Agent) parseResponse(response string) (*ToolCall, string, bool) {
+	startIdx := strings.IndexByte(response, '{')
 	if startIdx == -1 {
-		return nil, false
-	}
-
-	// Extract JSON
-	braceCount := 0
-	endIdx := -1
-	for i := startIdx; i < len(response); i++ {
-		if response[i] == '{' {
-			braceCount++
-		} else if response[i] == '}' {
-			braceCount--
-			if braceCount == 0 {
-				endIdx = i + 1
-				break
-			}
-		}
-	}
-
-	if endIdx == -1 {
-		return nil, false
-	}
-
-	jsonStr = response[startIdx:endIdx]
-
-	// Check if this is a final answer
-	var finalAnswerCheck map[string]interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &finalAnswerCheck); err == nil {
-		if _, hasFinalAnswer := finalAnswerCheck["final_answer"]; hasFinalAnswer {
-			return nil, true
-		}
+		return nil, "", false
 	}
 
 	var raw struct {
-		ToolName string          `json:"tool_name"`
-		Input    json.RawMessage `json:"input"`
-		Thought  string          `json:"thought"`
+		FinalAnswer string          `json:"final_answer"`
+		ToolName    string          `json:"tool_name"`
+		Input       json.RawMessage `json:"input"`
+		Thought     string          `json:"thought"`
 	}
-	if err := json.Unmarshal([]byte(jsonStr), &raw); err != nil {
-		return nil, false
+
+	// json.NewDecoder reads one complete JSON object and ignores any trailing text (like ```)
+	dec := json.NewDecoder(strings.NewReader(response[startIdx:]))
+	if err := dec.Decode(&raw); err != nil {
+		return nil, "", false
+	}
+
+	if raw.FinalAnswer != "" {
+		return nil, raw.FinalAnswer, true
 	}
 
 	var inputStr string
 	if len(raw.Input) > 0 {
-		// Unquote if the LLM sent a JSON string ("get pods -A");
-		// otherwise keep the JSON object/array as a raw JSON string.
 		if err := json.Unmarshal(raw.Input, &inputStr); err != nil {
 			inputStr = string(raw.Input)
 		}
 	}
 
 	if raw.ToolName == "" || inputStr == "" {
-		return nil, false
+		return nil, "", false
 	}
 
 	return &ToolCall{
 		ToolName: raw.ToolName,
 		Input:    inputStr,
 		Thought:  raw.Thought,
-	}, false
+	}, "", false
 }

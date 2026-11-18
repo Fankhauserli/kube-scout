@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/Fankhauserli/kube-scout/agent"
 	"github.com/Fankhauserli/kube-scout/api"
@@ -13,7 +16,8 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
 
 	config, err := config.LoadEnv()
 	if err != nil {
@@ -36,37 +40,23 @@ func main() {
 			log.Fatalf("[ERROR] [main] Failed to connect to RabbitMQ event queue: %v", err)
 		}
 		defer eventConn.Close()
-		if err := eventConn.Channel.Qos(1, 0, false); err != nil {
-			log.Fatalf("[ERROR] [main] Failed to set QoS: %v", err)
-		}
 
-		msgs, err := eventConn.Channel.Consume(
-			eventConn.Queue.Name, // queue
-			"",                   // consumer
-			false,                // auto-ack = false (manual ack)
-			false,                // exclusive
-			false,                // no-local
-			false,                // no-wait
-			nil,                  // args
-		)
-		if err != nil {
-			log.Fatalf("[ERROR] [main] Failed to register consumer: %v", err)
-		}
+		err = eventConn.Consume(ctx, func(ctx context.Context, message string) error {
+			log.Printf("[INFO] [main] Received a message: %s", message)
+			runCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+			result, err := agentInstance.Run(runCtx, prompt+"\n\nEvent: "+message)
+			cancel()
 
-		log.Printf("[INFO] [main] Waiting for messages")
-
-		for d := range msgs {
-			log.Printf("[INFO] [main] Received a message: %s", d.Body)
-			result, err := agentInstance.Run(ctx, prompt+"\n\nEvent: "+string(d.Body))
 			if err != nil {
 				log.Printf("[ERROR] [main] Error running agent: %v", err)
-				d.Nack(false, true)
-			} else {
-				d.Ack(false)
+				return err
 			}
 			log.Printf("[INFO] [main] Final result: %s", result)
+			return nil
+		})
+		if err != nil {
+			log.Fatalf("[ERROR] [main] Failed to consume messages from RabbitMQ: %v", err)
 		}
-
 	} else {
 		result, err := agentInstance.Run(ctx, prompt)
 		if err != nil {
@@ -96,9 +86,9 @@ func registerTools(toolRegistry *tool.ToolRegistry, config *config.EnvConfig) {
 		if toolConfig.Enabled && toolConfig.Name == "mail" {
 			// Register the mail tool
 			mailTool := &tool.MailTool{
-				Addr:     toolConfig.Configuration["addr"].(string),
-				MailFrom: toolConfig.Configuration["mailFrom"].(string),
-				MailTo:   toolConfig.Configuration["mailTo"].(string),
+				Addr:     toolConfig.Configuration["addr"],
+				MailFrom: toolConfig.Configuration["mailFrom"],
+				MailTo:   toolConfig.Configuration["mailTo"],
 			}
 			toolRegistry.Register(mailTool)
 		} else if toolConfig.Enabled && toolConfig.NewTool.Name != "" {
