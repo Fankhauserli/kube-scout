@@ -72,7 +72,7 @@ func (a *Agent) Run(ctx context.Context, task string) (string, error) {
 				Input:    toolCall.Input,
 				Output:   toolResult,
 				ToolName: toolCall.ToolName,
-				Error:    fmt.Sprintf("Tool '%s' execution failed: %v", toolCall.ToolName, err),
+				Error:    err.Error(),
 			})
 			continue
 		}
