@@ -43,7 +43,7 @@ func main() {
 
 		err = eventConn.Consume(ctx, func(ctx context.Context, message string) error {
 			log.Printf("[INFO] [main] Received a message: %s", message)
-			runCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+			runCtx, cancel := context.WithTimeout(ctx, 15*time.Minute)
 			result, err := agentInstance.Run(runCtx, prompt+"\n\nEvent: "+message)
 			cancel()
 
