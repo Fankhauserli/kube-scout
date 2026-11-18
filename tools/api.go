@@ -55,7 +55,7 @@ func (c *ApiTool) Execute(ctx context.Context, input string) (string, error) {
 		return "", err
 	}
 
-	log.Printf(" [tool: api] %s", string(respBody))
+	log.Printf("[INFO] [tool: api] %s", string(respBody))
 	return string(respBody), nil
 }
 

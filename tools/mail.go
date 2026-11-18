@@ -99,6 +99,6 @@ func (c *MailTool) Execute(ctx context.Context, input string) (string, error) {
 	}
 
 	msg = fmt.Sprintf("Email sent successfully to %s with subject: %s", c.MailTo, mailContent.Subject)
-	log.Printf(" [tool: mail] %s", msg)
+	log.Printf("[INFO] [tool: mail] %s", msg)
 	return msg, err
 }

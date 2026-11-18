@@ -13,7 +13,7 @@ func (a *Agent) Run(ctx context.Context, task string) (string, error) {
 
 	for iterations < a.maxIterations {
 		iterations++
-		log.Printf("Iteration %d: Processing task", iterations)
+		log.Printf("[INFO] [agent] Iteration %d: Processing task", iterations)
 
 		// Build the prompt with context
 		prompt := a.buildPrompt(conversationHistory)
@@ -29,7 +29,7 @@ func (a *Agent) Run(ctx context.Context, task string) (string, error) {
 			return "", fmt.Errorf("LLM error: %w", err)
 		}
 
-		log.Printf("LLM Response: %s", response)
+		log.Printf("[INFO] [agent] LLM response: %s", response)
 
 		// Try to parse a tool call from the response
 		toolCall, isFinalAnswer := a.parseResponse(response)
@@ -54,12 +54,12 @@ func (a *Agent) Run(ctx context.Context, task string) (string, error) {
 
 		toolResult, err := tool.Execute(ctx, toolCall.Input)
 		if err != nil {
-			log.Printf("Tool '%s' failed: %v", toolCall.ToolName, err)
+			log.Printf("[ERROR] [agent] Tool '%s' failed: %v", toolCall.ToolName, err)
 			conversationHistory = append(conversationHistory, fmt.Sprintf("Tool execution failed: %v", err))
 			continue
 		}
 
-		log.Printf("Tool '%s' executed successfully", toolCall.ToolName)
+		log.Printf("[INFO] [agent] Tool '%s' executed successfully", toolCall.ToolName)
 
 		if len(toolResult) > a.maxToolResultLength {
 			toolResult = toolResult[:a.maxToolResultLength] + "... (truncated)"

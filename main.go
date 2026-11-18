@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 
@@ -18,7 +17,7 @@ func main() {
 
 	config, err := config.LoadEnv()
 	if err != nil {
-		log.Fatalf("Failed to load environment config: %v", err)
+		log.Fatalf("[ERROR] [main] Failed to load environment config: %v", err)
 	}
 
 	// Set up tools
@@ -34,11 +33,11 @@ func main() {
 	if config.Trigger.Enabled {
 		eventConn, err := event.NewRabbitMQEventQueue(config.Trigger.Address, config.Trigger.Channel, config.Trigger.UserEnv, config.Trigger.PasswordEnv)
 		if err != nil {
-			log.Fatalf("Failed to connect to RabbitMQ event queue: %v", err)
+			log.Fatalf("[ERROR] [main] Failed to connect to RabbitMQ event queue: %v", err)
 		}
 		defer eventConn.Close()
 		if err := eventConn.Channel.Qos(1, 0, false); err != nil {
-			log.Fatalf("Failed to set QoS: %v", err)
+			log.Fatalf("[ERROR] [main] Failed to set QoS: %v", err)
 		}
 
 		msgs, err := eventConn.Channel.Consume(
@@ -51,31 +50,30 @@ func main() {
 			nil,                  // args
 		)
 		if err != nil {
-			log.Fatalf("Failed to register consumer: %v", err)
+			log.Fatalf("[ERROR] [main] Failed to register consumer: %v", err)
 		}
 
-		log.Printf(" [*] Waiting for messages.")
+		log.Printf("[INFO] [main] Waiting for messages")
 
 		for d := range msgs {
-			log.Printf(" [x] Received a message: %s", d.Body)
+			log.Printf("[INFO] [main] Received a message: %s", d.Body)
 			result, err := agentInstance.Run(ctx, prompt+"\n\nEvent: "+string(d.Body))
 			if err != nil {
-				log.Printf("Error running agent: %v", err)
+				log.Printf("[ERROR] [main] Error running agent: %v", err)
 				d.Nack(false, true)
 			} else {
 				d.Ack(false)
 			}
-			log.Printf(" [x] %s", result)
+			log.Printf("[INFO] [main] Final result: %s", result)
 		}
 
 	} else {
 		result, err := agentInstance.Run(ctx, prompt)
 		if err != nil {
-			log.Fatalf("Agent failed: %v", err)
+			log.Fatalf("[ERROR] [main] Agent failed: %v", err)
 		}
 
-		fmt.Println("Final Result:")
-		fmt.Println(result)
+		log.Printf("[INFO] [main] Final result: %s", result)
 	}
 }
 
@@ -84,7 +82,7 @@ func getPrompt(config *config.EnvConfig) string {
 	if config.Agent.PromptFile != "" {
 		promptContent, err := os.ReadFile(config.Agent.PromptFile)
 		if err != nil {
-			log.Fatalf("Failed to read prompt file: %v", err)
+			log.Fatalf("[ERROR] [main] Failed to read prompt file: %v", err)
 		}
 		prompt = string(promptContent)
 	}
