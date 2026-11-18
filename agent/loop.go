@@ -88,5 +88,5 @@ func (a *Agent) Run(ctx context.Context, task string) (string, error) {
 		})
 	}
 
-	return "max iterations reached without completing the task", nil
+	return "", fmt.Errorf("max iterations (%d) reached without completing the task", a.maxIterations)
 }

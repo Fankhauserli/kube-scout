@@ -18,12 +18,15 @@ func (c *KubectlTool) Description() string {
 }
 
 func (c *KubectlTool) Execute(ctx context.Context, input string) (string, error) {
-	cmd := exec.CommandContext(ctx, "/usr/local/bin/kubectl", strings.Split(input, " ")...)
+	args := strings.Fields(strings.TrimPrefix(strings.TrimSpace(input), "kubectl "))
+	cmd := exec.CommandContext(ctx, "/usr/local/bin/kubectl", args...)
+
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Printf("[ERROR] [tool: kubectl] %s", string(output))
 		return string(output), err
 	}
+
 	log.Printf("[INFO] [tool: kubectl] %s", string(output))
 	return string(output), nil
 }

@@ -68,13 +68,14 @@ func (c *MailTool) Execute(ctx context.Context, input string) (string, error) {
 	}
 
 	host, _, _ := net.SplitHostPort(c.Addr)
-	client, err := smtp.NewClient(conn, host)
 
+	client, err := smtp.NewClient(conn, host)
 	if err != nil {
+		conn.Close()
 		return "", fmt.Errorf("failed to connect to SMTP server: %w", err)
 	}
-
 	defer client.Close()
+
 	if err = client.Mail(c.MailFrom); err != nil {
 		return "", fmt.Errorf("failed to set sender: %w", err)
 	}

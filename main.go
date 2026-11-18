@@ -28,7 +28,7 @@ func main() {
 	toolRegistry := tool.NewToolRegistry()
 	registerTools(toolRegistry, config)
 
-	llmClient := api.NewOpenAIClient(config.LLM.Endpoint, config.LLM.ModelName, config.LLM.ApiKeyEnv)
+	llmClient := api.NewLLMClient(config.LLM)
 
 	prompt := getPrompt(config)
 	// Create agent
