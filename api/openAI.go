@@ -37,6 +37,9 @@ func (o *OpenAIClient) GenerateResponse(ctx context.Context, prompt string) (str
 		Input: responses.ResponseNewParamsInputUnion{OfString: openai.String(prompt)},
 		Model: o.model,
 	})
+	if err != nil {
+		return "", err
+	}
 
 	return resp.OutputText(), err
 }
