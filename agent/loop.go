@@ -61,7 +61,7 @@ func (a *Agent) Run(ctx context.Context, task string) (string, error) {
 		}
 
 		toolResult, err := tool.Execute(ctx, toolCall.Input)
-		if len(toolResult) > a.maxToolResultLength {
+		if toolResult != "" && len(toolResult) > a.maxToolResultLength {
 			toolResult = toolResult[:a.maxToolResultLength] + "... (truncated)"
 		}
 
